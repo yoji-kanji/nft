@@ -97,12 +97,7 @@ contract Yoji is Ownable, ReentrancyGuard {
     
     // Customized
     uint256 private TOKEN_PRICE = 30000000000000000;
-    //uint256 private constant MASK = 0x000000000000000000000000000000000000000000000000ffffffffffffffff;
-    //uint256 private constant SHIFT1 = 0x0000000000000000000000000000000000000000000000010000000000000000;
-    //uint256 private constant SHIFT2 = 0x0000000000000000000000000000000100000000000000000000000000000000;
-    //uint256 private constant SHIFT3 = 0x0000000000000001000000000000000000000000000000000000000000000000;
     uint256 private constant NUM_CHARS = 2136;
-    uint256 private constant MASK = NUM_CHARS - 1;
     uint256 private constant SHIFT1 = NUM_CHARS;
     uint256 private constant SHIFT2 = SHIFT1 * NUM_CHARS;
     uint256 private constant SHIFT3 = SHIFT2 * NUM_CHARS;
@@ -131,13 +126,13 @@ contract Yoji is Ownable, ReentrancyGuard {
         return true;
     }
 
-    function checkSeed(uint256 _seed) external view returns (uint256, uint256, string memory) {
-        uint256 tokenId = uint256(keccak256(abi.encodePacked(address(this), _seed))) % COMBINATIONS;
-        (, string memory _chars) = _checkTokenId(tokenId);
-        return ((block.number-1)/10*10, tokenId, _chars);
+    function checkSeed(uint256 _seed) external view returns (uint256 _tokenId, string memory _chars) {
+        _tokenId = uint256(keccak256(abi.encodePacked(address(this), _seed))) % COMBINATIONS;
+        (, _chars) = _checkTokenId(_tokenId);
+        return (_tokenId, _chars);
     }
 
-    function _getFreeNFT(uint256 _seed) external payable nonReentrant returns (bool) {
+    function _getFreeNFT(uint256 _seed) external nonReentrant returns (bool) {
         uint256 tokenId = uint256(keccak256(abi.encodePacked(address(this), _seed))) % COMBINATIONS;
 
         _mint(msg.sender, tokenId);
@@ -172,12 +167,12 @@ contract Yoji is Ownable, ReentrancyGuard {
 
     // Customized (private)
 
-    function tokenIdToArray(uint256 _tokenId) private pure returns (uint256, uint256, uint256, uint256) {
+    function tokenIdToArray(uint256 _tokenId) public pure returns (uint256, uint256, uint256, uint256) {
         require(_tokenId < COMBINATIONS, 'invalid _tokenId');
-        uint256 char4 = _tokenId & MASK;
-        uint256 char3 = (_tokenId / SHIFT1) & MASK;
-        uint256 char2 = (_tokenId / SHIFT2) & MASK;
-        uint256 char1 = (_tokenId / SHIFT3) & MASK;
+        uint256 char4 = _tokenId % SHIFT1;
+        uint256 char3 = (_tokenId / SHIFT1) % SHIFT1;
+        uint256 char2 = (_tokenId / SHIFT2) % SHIFT1;
+        uint256 char1 = (_tokenId / SHIFT3) % SHIFT1;
         return (char1, char2, char3, char4);
     }
 
